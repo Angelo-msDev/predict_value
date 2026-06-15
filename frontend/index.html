@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Car Price Predictor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Car Price Predictor</h1>
+
+        <input id="year" type="number" placeholder="Ano">
+
+        <input id="km" type="number" placeholder="KM Rodado">
+
+        <select id="fuel">
+            <option>Petrol</option>
+            <option>Diesel</option>
+            <option>CNG</option>
+            <option>LPG</option>
+        </select>
+
+        <button onclick="predictPrice()">Prever</button>
+
+        <h2 id="result"></h2>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
