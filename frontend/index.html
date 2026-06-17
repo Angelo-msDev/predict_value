@@ -2,27 +2,69 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Car Price Predictor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preditor de Preço de Veículos</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>Car Price Predictor</h1>
+        <header>
+            <h1>Preditor de Preço de Veículos</h1>
+            <p>Sistema de predição com Machine Learning — Regressão</p>
+        </header>
 
-        <input id="year" type="number" placeholder="Ano">
+        <section class="form-section">
+            <h2>Nova Predição</h2>
+            <form id="predictForm">
+                <div class="grid">
+                    <label>
+                        Ano
+                        <input id="year" type="number" min="1990" max="2025" placeholder="Ex: 2018" required>
+                    </label>
 
-        <input id="km" type="number" placeholder="KM Rodado">
+                    <label>
+                        KM Rodado
+                        <input id="km" type="number" min="0" placeholder="Ex: 50000" required>
+                    </label>
 
-        <select id="fuel">
-            <option>Petrol</option>
-            <option>Diesel</option>
-            <option>CNG</option>
-            <option>LPG</option>
-        </select>
+                    <label>
+                        Marca
+                        <select id="brand" required></select>
+                    </label>
 
-        <button onclick="predictPrice()">Prever</button>
+                    <label>
+                        Combustível
+                        <select id="fuel" required></select>
+                    </label>
 
-        <h2 id="result"></h2>
+                    <label>
+                        Tipo de Vendedor
+                        <select id="seller_type" required></select>
+                    </label>
+
+                    <label>
+                        Transmissão
+                        <select id="transmission" required></select>
+                    </label>
+
+                    <label>
+                        Proprietário
+                        <select id="owner" required></select>
+                    </label>
+                </div>
+
+                <button type="submit">Prever Preço</button>
+            </form>
+
+            <div id="result" class="result hidden"></div>
+            <div id="error" class="error hidden"></div>
+        </section>
+
+        <section class="history-section">
+            <h2>Histórico de Predições</h2>
+            <button type="button" id="refreshHistory" class="secondary">Atualizar</button>
+            <div id="history"></div>
+        </section>
     </div>
 
     <script src="script.js"></script>
