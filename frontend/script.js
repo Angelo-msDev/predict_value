@@ -1,4 +1,4 @@
-const API_URL = "https://predictvalue-production.up.railway.app";
+const API_URL = "comfortable-charisma-production-abbe.up.railway.app";
 
 // Dicionário ÚNICO para traduzir os termos visuais das barras para o Português
 const traducoes = {
