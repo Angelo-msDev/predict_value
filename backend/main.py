@@ -11,7 +11,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR = os.path.join(BASE_DIR, "model")
+# CORREÇÃO: Adicionado o ".." para voltar uma pasta e achar a model corretamente
+MODEL_DIR = os.path.join(BASE_DIR, "..", "model")
 DB_PATH = os.path.join(BASE_DIR, "predictions.db")
 FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
 
