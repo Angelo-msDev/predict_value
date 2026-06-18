@@ -1,11 +1,40 @@
 const API_URL = "http://127.0.0.1:8000";
 
+// Dicionário global para traduzir os termos do modelo para o Português
+const traducoes = {
+    // Combustível (Fuel)
+    "Petrol": "Gasolina",
+    "Diesel": "Diesel",
+    "CNG": "Gás GNV",
+    "LPG": "Gás GLP",
+    "Electric": "Elétrico",
+    
+    // Tipo de Vendedor (Seller Type)
+    "Dealer": "Concessionária",
+    "Individual": "Particular",
+    "Trustmark Dealer": "Revendedor Certificado",
+    
+    // Transmissão (Transmission)
+    "Automatic": "Automático",
+    "Manual": "Manual",
+    
+    // Proprietário (Owner)
+    "First Owner": "Único Dono",
+    "Second Owner": "2º Dono",
+    "Third Owner": "3º Dono",
+    "Fourth & Above Owner": "4º Dono ou mais",
+    "Test Drive Car": "Carro de Teste"
+};
+
 function formatPrice(value) {
+    // CONVERSÃO: Multiplica o valor em Rupias por 0.065 para converter para o Real brasileiro
+    const valorEmReais = value * 0.065;
+
     return new Intl.NumberFormat("pt-BR", {
         style: "currency",
-        currency: "INR",
-        maximumFractionDigits: 0,
-    }).format(value);
+        currency: "BRL",
+        maximumFractionDigits: 0, // Mantém sem centavos para o visual ficar mais limpo
+    }).format(valorEmReais);
 }
 
 function fillSelect(id, options) {
@@ -13,8 +42,11 @@ function fillSelect(id, options) {
     select.innerHTML = "";
     options.forEach((option) => {
         const el = document.createElement("option");
-        el.value = option;
-        el.textContent = option;
+        el.value = option; // Mantém o termo em inglês para enviar corretamente ao backend Python
+        
+        // Se existir tradução exibe em PT-BR, senão mantém o texto original (ex: marcas de carros)
+        el.textContent = traducoes[option] || option; 
+        
         select.appendChild(el);
     });
 }
@@ -103,7 +135,7 @@ async function loadHistory() {
                             <td>#${row.id}</td>
                             <td>${row.year}</td>
                             <td>${row.km_driven.toLocaleString("pt-BR")}</td>
-                            <td>${row.brand}</td>
+                            <td>${traducoes[row.brand] || row.brand}</td>
                             <td>${formatPrice(row.predicted_price)}</td>
                         </tr>
                     `
