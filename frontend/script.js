@@ -191,3 +191,4 @@ if (refreshHistory) {
 // Execução inicial
 loadMetadata();
 loadHistory();
+// correção vercel
