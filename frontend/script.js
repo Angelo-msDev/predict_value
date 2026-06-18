@@ -1,6 +1,6 @@
 const API_URL = "https://predictvalue-production.up.railway.app";
 
-// Dicionário global para traduzir os termos do modelo para o Português
+// Dicionário ÚNICO para traduzir os termos visuais das barras para o Português
 const traducoes = {
     // Combustível (Fuel)
     "Petrol": "Gasolina",
@@ -26,6 +26,7 @@ const traducoes = {
     "Test Drive Car": "Carro de Teste"
 };
 
+// Formata o preço final para a moeda padrão brasileira (R$)
 function formatPrice(value) {
     // CONVERSÃO: Multiplica o valor em Rupias por 0.065 para converter para o Real brasileiro
     const valorEmReais = value * 0.065;
@@ -37,22 +38,24 @@ function formatPrice(value) {
     }).format(valorEmReais);
 }
 
+// Preenche as barras de seleção mantendo o valor original (inglês) por trás e o texto em português visível
 function fillSelect(id, options) {
     const select = document.getElementById(id);
-    if (!select) return; // Evita quebra caso o elemento não exista no HTML
+    if (!select) return; 
     
     select.innerHTML = "";
     options.forEach((option) => {
         const el = document.createElement("option");
-        el.value = option; // Mantém o termo em inglês para enviar corretamente ao backend Python
+        el.value = option; // Envia o termo original exigido pelo modelo do backend Python
         
-        // Se existir tradução exibe em PT-BR, senão mantém o texto original (ex: marcas de carros)
+        // Exibe o termo traduzido em PT-BR para o usuário brasileiro
         el.textContent = traducoes[option] || option; 
         
         select.appendChild(el);
     });
 }
 
+// Carrega os dados nas caixas de seleção assim que a página abre
 async function loadMetadata() {
     try {
         const response = await fetch(`${API_URL}/metadata`);
@@ -70,12 +73,13 @@ async function loadMetadata() {
         console.error("Erro ao carregar metadados:", err);
         const errorEl = document.getElementById("error");
         if (errorEl) {
-            errorEl.textContent = "Não foi possível carregar as opções do formulário. Verifique a conexão com a API.";
+            errorEl.textContent = "Não foi possível preencher as opções do formulário. Verifique o servidor.";
             errorEl.classList.remove("hidden");
         }
     }
 }
 
+// Coleta os dados do formulário e envia para a rota de predição do modelo
 async function predictPrice(event) {
     event.preventDefault();
 
@@ -123,6 +127,7 @@ async function predictPrice(event) {
     }
 }
 
+// Carrega a tabela de histórico formatando os números para o padrão brasileiro (.toLocaleString)
 async function loadHistory() {
     const historyEl = document.getElementById("history");
     if (!historyEl) return;
@@ -157,7 +162,7 @@ async function loadHistory() {
                         <tr>
                             <td>#${row.id}</td>
                             <td>${row.year}</td>
-                            <td>${row.km_driven.toLocaleString("pt-BR")}</td>
+                            <td>${row.km_driven.toLocaleString("pt-BR")} km</td>
                             <td>${traducoes[row.brand] || row.brand}</td>
                             <td>${formatPrice(row.predicted_price)}</td>
                         </tr>
@@ -172,7 +177,7 @@ async function loadHistory() {
     }
 }
 
-// Inicialização segura dos Event Listeners
+// Inicialização segura dos eventos do DOM
 const predictForm = document.getElementById("predictForm");
 if (predictForm) {
     predictForm.addEventListener("submit", predictPrice);
@@ -183,6 +188,6 @@ if (refreshHistory) {
     refreshHistory.addEventListener("click", loadHistory);
 }
 
-// Inicializa os dados da tela
+// Execução inicial
 loadMetadata();
 loadHistory();
