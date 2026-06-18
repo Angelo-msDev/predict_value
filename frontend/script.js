@@ -39,6 +39,8 @@ function formatPrice(value) {
 
 function fillSelect(id, options) {
     const select = document.getElementById(id);
+    if (!select) return; // Evita quebra caso o elemento não exista no HTML
+    
     select.innerHTML = "";
     options.forEach((option) => {
         const el = document.createElement("option");
@@ -52,14 +54,26 @@ function fillSelect(id, options) {
 }
 
 async function loadMetadata() {
-    const response = await fetch(`${API_URL}/metadata`);
-    const data = await response.json();
+    try {
+        const response = await fetch(`${API_URL}/metadata`);
+        if (!response.ok) {
+            throw new Error("Erro ao buscar metadados do servidor");
+        }
+        const data = await response.json();
 
-    fillSelect("brand", data.brands);
-    fillSelect("fuel", data.fuels);
-    fillSelect("seller_type", data.seller_types);
-    fillSelect("transmission", data.transmissions);
-    fillSelect("owner", data.owners);
+        fillSelect("brand", data.brands || []);
+        fillSelect("fuel", data.fuels || []);
+        fillSelect("seller_type", data.seller_types || []);
+        fillSelect("transmission", data.transmissions || []);
+        fillSelect("owner", data.owners || []);
+    } catch (err) {
+        console.error("Erro ao carregar metadados:", err);
+        const errorEl = document.getElementById("error");
+        if (errorEl) {
+            errorEl.textContent = "Não foi possível carregar as opções do formulário. Verifique a conexão com a API.";
+            errorEl.classList.remove("hidden");
+        }
+    }
 }
 
 async function predictPrice(event) {
@@ -67,8 +81,9 @@ async function predictPrice(event) {
 
     const resultEl = document.getElementById("result");
     const errorEl = document.getElementById("error");
-    resultEl.classList.add("hidden");
-    errorEl.classList.add("hidden");
+    
+    if (resultEl) resultEl.classList.add("hidden");
+    if (errorEl) errorEl.classList.add("hidden");
 
     const payload = {
         year: Number(document.getElementById("year").value),
@@ -88,30 +103,38 @@ async function predictPrice(event) {
         });
 
         if (!response.ok) {
-            throw new Error("Erro ao realizar predição");
+            throw new Error("Erro ao realizar predição no modelo");
         }
 
         const data = await response.json();
-        resultEl.innerHTML = `
-            <strong>Preço estimado:</strong> ${formatPrice(data.predicted_price)}
-            <br><small>ID da predição: #${data.id}</small>
-        `;
-        resultEl.classList.remove("hidden");
+        if (resultEl) {
+            resultEl.innerHTML = `
+                <strong>Preço estimado:</strong> ${formatPrice(data.predicted_price)}
+                <br><small>ID da predição: #${data.id}</small>
+            `;
+            resultEl.classList.remove("hidden");
+        }
         loadHistory();
     } catch (err) {
-        errorEl.textContent = err.message;
-        errorEl.classList.remove("hidden");
+        if (errorEl) {
+            errorEl.textContent = err.message;
+            errorEl.classList.remove("hidden");
+        }
     }
 }
 
 async function loadHistory() {
     const historyEl = document.getElementById("history");
+    if (!historyEl) return;
 
     try {
         const response = await fetch(`${API_URL}/predictions?limit=10`);
+        if (!response.ok) {
+            throw new Error();
+        }
         const rows = await response.json();
 
-        if (rows.length === 0) {
+        if (!rows || rows.length === 0) {
             historyEl.innerHTML = "<p>Nenhuma predição registrada ainda.</p>";
             return;
         }
@@ -145,12 +168,21 @@ async function loadHistory() {
             </table>
         `;
     } catch {
-        historyEl.innerHTML = "<p>Não foi possível carregar o histórico.</p>";
+        historyEl.innerHTML = "<p>Não foi possível carregar o histórico de predições.</p>";
     }
 }
 
-document.getElementById("predictForm").addEventListener("submit", predictPrice);
-document.getElementById("refreshHistory").addEventListener("click", loadHistory);
+// Inicialização segura dos Event Listeners
+const predictForm = document.getElementById("predictForm");
+if (predictForm) {
+    predictForm.addEventListener("submit", predictPrice);
+}
 
+const refreshHistory = document.getElementById("refreshHistory");
+if (refreshHistory) {
+    refreshHistory.addEventListener("click", loadHistory);
+}
+
+// Inicializa os dados da tela
 loadMetadata();
 loadHistory();
