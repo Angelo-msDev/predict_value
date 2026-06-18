@@ -164,3 +164,8 @@ def get_prediction(prediction_id: int):
 
 if os.path.isdir(FRONTEND_DIR):
     app.mount("/app", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
+# ... todo o seu código atual fica aqui em cima ...
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
