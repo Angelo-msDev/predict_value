@@ -1,30 +1,4 @@
-const API_URL = "https://predict-value-production.up.railway.app"; // URL atualizada com o domínio do Railway
-
-// Dicionário global para traduzir os termos do modelo para o Português
-const traducoes = {
-    // Combustível (Fuel)
-    "Petrol": "Gasolina",
-    "Diesel": "Diesel",
-    "CNG": "Gás GNV",
-    "LPG": "Gás GLP",
-    "Electric": "Elétrico",
-    
-    // Tipo de Vendedor (Seller Type)
-    "Dealer": "Concessionária",
-    "Individual": "Particular",
-    "Trustmark Dealer": "Revendedor Certificado",
-    
-    // Transmissão (Transmission)
-    "Automatic": "Automático",
-    "Manual": "Manual",
-    
-    // Proprietário (Owner)
-    "First Owner": "Único Dono",
-    "Second Owner": "2º Dono",
-    "Third Owner": "3º Dono",
-    "Fourth & Above Owner": "4º Dono ou mais",
-    "Test Drive Car": "Carro de Teste"
-};
+const API_URL = "https://predictvalue-production.up.railway.app";
 
 // Dicionário global para traduzir os termos do modelo para o Português
 const traducoes = {
