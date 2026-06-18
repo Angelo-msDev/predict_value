@@ -11,16 +11,29 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# CORREÇÃO: Adicionado o ".." para voltar uma pasta e achar a model corretamente
-MODEL_DIR = os.path.join(BASE_DIR, "model")
+
+# OBSERVAÇÃO: Ajuste aqui caso sua pasta 'model' esteja fora de 'backend'
+# Se 'model' estiver na raiz do projeto (fora de backend), mude para: os.path.join(BASE_DIR, "..", "model")
+MODEL_DIR = os.path.join(BASE_DIR, "model") 
 DB_PATH = os.path.join(BASE_DIR, "predictions.db")
 FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
 
-model = joblib.load(os.path.join(MODEL_DIR, "car_price_model.pkl"))
-model_columns = joblib.load(os.path.join(MODEL_DIR, "model_columns.pkl"))
-metadata = joblib.load(os.path.join(MODEL_DIR, "metadata.pkl"))
+# Carregamento seguro dos arquivos PKL
+try:
+    model = joblib.load(os.path.join(MODEL_DIR, "car_price_model.pkl"))
+    model_columns = joblib.load(os.path.join(MODEL_DIR, "model_columns.pkl"))
+    metadata = joblib.load(os.path.join(MODEL_DIR, "metadata.pkl"))
+except Exception as e:
+    print(f"ERRO CRÍTICO AO CARREGAR OS MODELOS: {e}")
+    # Tentativa de fallback subindo um nível caso a estrutura mude no deploy
+    ALT_MODEL_DIR = os.path.join(BASE_DIR, "..", "model")
+    model = joblib.load(os.path.join(ALT_MODEL_DIR, "car_price_model.pkl"))
+    model_columns = joblib.load(os.path.join(ALT_MODEL_DIR, "model_columns.pkl"))
+    metadata = joblib.load(os.path.join(ALT_MODEL_DIR, "metadata.pkl"))
 
 app = FastAPI(title="Car Price Predictor API")
+
+# Middleware de CORS 100% liberado para receber a Vercel
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -28,7 +41,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 class PredictionInput(BaseModel):
     year: int = Field(..., ge=1990, le=2025)
@@ -38,7 +50,6 @@ class PredictionInput(BaseModel):
     seller_type: str
     transmission: str
     owner: str
-
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -61,7 +72,6 @@ def init_db():
     conn.commit()
     conn.close()
 
-
 def preprocess_input(data: PredictionInput) -> pd.DataFrame:
     input_dict = {col: 0 for col in model_columns}
     input_dict["year"] = data.year
@@ -79,7 +89,6 @@ def preprocess_input(data: PredictionInput) -> pd.DataFrame:
             input_dict[col] = 1
 
     return pd.DataFrame([input_dict], columns=model_columns)
-
 
 def save_prediction(data: PredictionInput, price: float) -> int:
     conn = sqlite3.connect(DB_PATH)
@@ -106,21 +115,17 @@ def save_prediction(data: PredictionInput, price: float) -> int:
     conn.close()
     return row_id
 
-
 @app.on_event("startup")
 def startup():
     init_db()
 
-
 @app.get("/")
 def home():
-    return {"message": "API de predição de preço de veículos funcionando"}
-
+    return {"message": "API de predição de preço de veículos funcionando de forma pública"}
 
 @app.get("/metadata")
 def get_metadata():
     return metadata
-
 
 @app.post("/predict")
 def predict(data: PredictionInput):
@@ -134,7 +139,6 @@ def predict(data: PredictionInput):
         "predicted_price": round(predicted, 2),
     }
 
-
 @app.get("/predictions")
 def list_predictions(limit: Optional[int] = 50):
     conn = sqlite3.connect(DB_PATH)
@@ -145,7 +149,6 @@ def list_predictions(limit: Optional[int] = 50):
     ).fetchall()
     conn.close()
     return [dict(row) for row in rows]
-
 
 @app.get("/predictions/{prediction_id}")
 def get_prediction(prediction_id: int):
@@ -162,12 +165,13 @@ def get_prediction(prediction_id: int):
 
     return dict(row)
 
-
 if os.path.isdir(FRONTEND_DIR):
     app.mount("/app", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
-# ... todo o seu código atual fica aqui em cima ...
 
+# CORREÇÃO CRÍTICA PARA O RAILWAY FUNCIONAR:
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
-    # Forçando novo deploy no railway
+    # Pega a porta injetada pelo Railway automaticamente, se não houver usa a 8080
+    port = int(os.environ.get("PORT", 8080))
+    # Host DEVE ser 0.0.0.0 para aceitar requisições de fora (da Vercel)
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
